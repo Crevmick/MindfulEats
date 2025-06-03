@@ -1,22 +1,36 @@
 import express from 'express';
-import passport from '../../Config/passportConfig,js';
+import passport from '../../Config/passportConfig.js';
 
 const router = express.Router();
 
-// Route to start Google OAuth authentication
+// Route to display login link
 router.get("/", (req, res) => {
-    res.send("<a href='/auth/google'>Login with Google<a>")
+  res.send("<a href='/auth/google'>Login with Google</a>");
 });
 
-router.get("/google", passport.authenticate('google', {scope: ["Profile", "email"]} ))
+// Start Google OAuth flow
+router.get(
+  "/google",
+  passport.authenticate('google', {
+    scope: ["profile", "email"]
+  })
+);
 
-router.get("/google/callback", passport.authenticate('google', {failureRedirect: "/" }), (req, res) => {
+// Callback route after Google authentication
+router.get(
+  "/google/callback",
+  passport.authenticate('google', { failureRedirect: "/" }),
+  (req, res) => {
     res.send(`Welcome ${req.user.displayName}`);
-});
+  }
+);
 
-router.get("/logout", (req, res) => {
-    req.logout();
-    res.redirect("/")
-})
+// Logout route
+router.get("/logout", (req, res, next) => {
+  req.logout(function(err) {
+    if (err) return next(err);
+    res.redirect("/");
+  });
+});
 
 export default router;

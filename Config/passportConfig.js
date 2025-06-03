@@ -15,9 +15,9 @@ passport.use(new GoogleStrategy({
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         // Extract profile information from Google
-        const { id, emails, displayName, photos } = profile;
+        const { id, emails,displayName}=profile;
 
-        // Try to find the user by Google ID
+        // check if the email already exits
         let user = await User.findOne({ googleId: id });
 
         if (!user) {
@@ -25,26 +25,27 @@ passport.use(new GoogleStrategy({
             user = new User({
                 googleId: id,
                 email: emails[0].value,
-                name: displayName,
-                profilePicture: photos[0].value, // Optional: Save profile picture
+                name: displayName, 
                 verified: true,  // Google users are typically verified
-                accessToken: accessToken, // Save access token (if i need it for future API calls)
-                refreshToken: refreshToken
+                accessToken,
+                refreshToken
             });
             await user.save(); // Save the new user in the database
+            return done(null, newUser);
         }
 
         // Generate a JWT token for the authenticated user
         const token = jwt.sign(
             { userId: user._id, email: user.email },
-            process.env.JWT_SECRET,  // Use your JWT secret
-            { expiresIn: '1h' }  // Token expires in 1 hour
+            process.env.JWT_SECRET,  
+            { expiresIn: '1h' }  
         );
 
         // Return the user data and JWT token
-        done(null, { user, token });
+        return done(null, { user, token });
     } catch (error) {
-        done(error, null);  // Handle any errors
+        console.error("Google Sign-In Error:", error);
+         return done(null, false);
     }
 }));
 

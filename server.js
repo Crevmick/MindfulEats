@@ -8,13 +8,16 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 
-// //importing DB
-// import connectDB from './Config/db,JS';
+//importing DB
+import connectDB from './Config/db.js';
 
-// dotenv.config();
+//importing route
+import authRouter from './routes/Auth/GoogleRoute.js';  // Import authRouter for Google login
 
-// //connect DB 
-// connectDB();
+dotenv.config();
+
+//connect DB 
+connectDB();
 
 
 //Initialiing the application
@@ -27,13 +30,56 @@ app.use(cors());
 app.use(helmet()); //  To secure HTTP headers
 
 
+// Mount routes for Google authentication
+app.use('/auth', authRouter); // This will handle /auth/google and /auth/google/callback
+
 
 // Serve static files from uploads folder
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-
+app.get('/', (req, res) => {
+    res.status(200).send(`
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>MindfullEat api</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              text-align: center;
+              padding: 50px;
+              background-color: #f4f4f9;
+              color: #333;
+            }
+            h1 {
+              color: #4CAF50;
+            }
+            p {
+              font-size: 18px;
+            }
+            a {
+              color: #007bff;
+              text-decoration: none;
+              font-weight: bold;
+            }
+            a:hover {
+              text-decoration: underline;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>MindfullEat api</h1>
+          <p>Status: <span style="color: green;">Success</span></p>
+          <p>To view the API documentation, click below:</p>
+          <p><a href="#" target="_blank">View API Documentation</a></p>
+        </body>
+      </html>
+    `);
+  });
 
 //listen to our server
 const PORT = process.env.PORT || 5000;
