@@ -20,8 +20,8 @@ Backend API for MindfulEats — a behavioral weight management platform focused 
 - User authentication  
 - Meal and emotion logging APIs  
 - AI-based emotion-food pattern analysis  
-- Group management for peer support  
-- Habit suggestion engine  
+- Group management for peer supports  
+- Habit suggestion engine
 - Notifications and mindfulness content APIs  
 
 ---
