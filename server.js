@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import morgan from 'morgan';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -28,6 +29,7 @@ app.use(express.json()); // for parsing JSON body
 app.use(morgan('dev'));
 app.use(cors());
 app.use(helmet()); //  To secure HTTP headers
+app.use(cookieParser());
 
 
 // Mount routes for Google authentication
