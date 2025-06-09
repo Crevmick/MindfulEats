@@ -16,17 +16,13 @@ const MoodLogSchema = new Schema({
     max: 10
   },
   moodEmoji: {
-    type: String, // Optional emoji representation
+    type: String,
     default: null
   },
   reasonText: {
     type: String,
     trim: true,
     default: ''
-  },
-  tags: {
-    type: [String], // e.g. ["anxious", "energized", "bored"]
-    default: []
   },
   createdAt: {
     type: Date,

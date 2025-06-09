@@ -16,7 +16,7 @@ const MealLogSchema = new Schema({
   },
   photoUrl: {
     type: String,
-    default: null // Optional photo
+    default: null 
   },
   portionSize: {
     type: String, // e.g. "1 cup", "medium plate"
@@ -33,11 +33,11 @@ const MealLogSchema = new Schema({
   moodLinkId: {
     type: Schema.Types.ObjectId,
     ref: 'MoodLog',
-    default: null // Optional link to mood
+    default: null 
   },
   mindfulPromptDone: {
     type: Boolean,
-    default: false // If they did the 30-second pause
+    default: false
   },
   createdAt: {
     type: Date,
