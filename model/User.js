@@ -10,17 +10,20 @@ const UserSchema = new Schema({
         unique: true,
         required: true,
         lowercase: true,
+        trim: true,
     },
     password: {
         type: String,
         required: function () {
-            return !this.googleId; // Only required for non-Google users
+            return !this.googleId;      
+            // Only required for non-Google users
         }
     },
     dateOfBirth: {
         type: Date,
         required: function () {
-            return !this.googleId; // Only required for non-Google users
+            return !this.googleId;
+            // Only required for non-Google users
         }
     },
     googleId: {
