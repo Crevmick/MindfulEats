@@ -8,9 +8,15 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import connectDB from './Config/db.js';
+import signUpRoute from './routes/Auth/signup.js';  // Import signUpRoute for user registration
+import signInRoute from './routes/Auth/signin.js';  // Import signInRoute for user login
+import userRoutes from './routes/Auth/users.js'; 
+
+
 
 //importing DB
-import connectDB from './Config/db.js';
+// import connectDB from './Config/db.js';
 
 //importing route
 import authRouter from './routes/Auth/GoogleRoute.js';  // Import authRouter for Google login
@@ -19,6 +25,7 @@ dotenv.config();
 
 //connect DB 
 connectDB();
+
 
 
 //Initialiing the application
@@ -34,6 +41,11 @@ app.use(cookieParser());
 
 // Mount routes for Google authentication
 app.use('/auth', authRouter); // This will handle /auth/google and /auth/google/callback
+
+// Routes
+app.use('/api/auth/signup', signUpRoute);
+app.use('/api/auth/signin', signInRoute);
+app.use('/api/auth/users', userRoutes); // Route to get all users
 
 
 // Serve static files from uploads folder
@@ -88,3 +100,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+

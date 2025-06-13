@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
-import UserOTPVerification from '.././src/model/UserOTPVerification.js';
+import UserOTPVerification from '../model/UserOTPVerification.js';
 
 // Set up transporter once
 const transporter = nodemailer.createTransport({

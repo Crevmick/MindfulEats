@@ -2,8 +2,8 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { check, validationResult } from 'express-validator';
 import User from '../model/User.js';
-import createToken from '../../util/createToken.js';
-import sendOTP from '../../util/sendOTP.js';
+import createToken from '../util/createToken.js';
+import sendOTP from '../util/sendOTP.js';
 
 // Validation rules for user registration
 export const registerUserValidationRules = () => {
@@ -29,7 +29,7 @@ export const registerUserValidationRules = () => {
 };
 
 // Controller to handle user registration
-export const registerUser = async (req, res) => {
+export const signUp = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ status: 'FAILED', errors: errors.array() });
@@ -48,8 +48,10 @@ export const registerUser = async (req, res) => {
       return res.status(409).json({ status: 'FAILED', errors: [{ msg: 'Email already exists!' }] });
     }
 
+     //this helps to validate hashed password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // create user
     const newUser = new User({
       name,
       email,
@@ -57,6 +59,7 @@ export const registerUser = async (req, res) => {
       dateOfBirth,
     });
 
+    // saving the user to the database
     const savedUser = await newUser.save();
 
     const otpResponse = await sendOTP({ _id: savedUser._id, email: savedUser.email });
