@@ -1,43 +1,30 @@
-// models/MealLog.js
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
-const { Schema } = mongoose;
-
-const MealLogSchema = new Schema({
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  foodName: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  photoUrl: {
-    type: String,
-    default: null 
-  },
+const mealSchema = new mongoose.Schema({
   portionSize: {
-    type: String, // e.g. "1 cup", "medium plate"
-    default: null
+    type: String,
+    required: false,
   },
-  timeEaten: {
-    type: Date,
-    required: true
+  hungerBefore: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 10
   },
-  tags: {
-    type: [String], // e.g. ['Craving', 'Healthy', 'Emotional']
-    default: []
+  hungerAfter: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 10
   },
-  moodLinkId: {
-    type: Schema.Types.ObjectId,
-    ref: 'MoodLog',
-    default: null 
+  notes: {
+    type: String,
+    required: false,
+    maxlength: 500, // Optional: Prevent too long entries
   },
-  mindfulPromptDone: {
-    type: Boolean,
-    default: false
+  mealImage: {
+    type: String, 
+    required: false
   },
   createdAt: {
     type: Date,
@@ -45,4 +32,4 @@ const MealLogSchema = new Schema({
   }
 });
 
-export default mongoose.model('MealLog', MealLogSchema);
+module.exports = mongoose.model('Meal', mealSchema);

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
 const UserSchema = new Schema({
-    name: {
+    fullName: {
         type: String,
         required: true
     },
@@ -16,13 +16,6 @@ const UserSchema = new Schema({
         type: String,
         required: function () {
             return !this.googleId;      
-            // Only required for non-Google users
-        }
-    },
-    dateOfBirth: {
-        type: Date,
-        required: function () {
-            return !this.googleId;
             // Only required for non-Google users
         }
     },

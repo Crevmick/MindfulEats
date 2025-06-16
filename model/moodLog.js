@@ -1,4 +1,3 @@
-// models/MoodLog.js
 import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
@@ -10,14 +9,30 @@ const MoodLogSchema = new Schema({
     required: true
   },
   moodScore: {
-    type: Number, // e.g., 1-5 or 1-10 scale
+    type: String,
     required: true,
-    min: 1,
-    max: 10
+    enum: ['Frustrated', 'Sad', 'Happy', 'Anxious', 'Grateful', 'Neutral']
   },
   moodEmoji: {
     type: String,
-    default: null
+    default: function () {
+      switch (this.moodScore) {
+        case 'Happy':
+          return '😊';
+        case 'Sad':
+          return '😞';
+        case 'Frustrated':
+          return '😣';
+        case 'Anxious':
+          return '😟';
+        case 'Grateful':
+          return '🙏';
+        case 'Neutral':
+          return '😐';
+        default:
+          return '😐';
+      }
+    }
   },
   reasonText: {
     type: String,

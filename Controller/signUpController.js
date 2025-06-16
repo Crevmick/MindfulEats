@@ -8,7 +8,7 @@ import sendOTP from '../util/sendOTP.js';
 // Validation rules for user registration
 export const registerUserValidationRules = () => {
   return [
-    check('name')
+    check('fullName')
       .trim()
       .notEmpty().withMessage('Name is required.')
       .matches(/^[a-zA-Z ]*$/).withMessage('Name can only contain letters and spaces.')
@@ -21,10 +21,6 @@ export const registerUserValidationRules = () => {
     check('password')
       .notEmpty().withMessage('Password is required.')
       .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long.'),
-    check('dateOfBirth')
-      .notEmpty().withMessage('Date of birth is required.')
-      .isISO8601().withMessage('Invalid date of birth format. Please use YYYY-MM-DD.')
-      .toDate(),
   ];
 };
 
@@ -36,7 +32,7 @@ export const signUp = async (req, res) => {
   }
 
   try {
-    let { name, email, password, dateOfBirth } = req.body;
+    let { fullName, email, password } = req.body;
 
     name = name?.trim();
     email = email?.trim();
@@ -56,7 +52,6 @@ export const signUp = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      dateOfBirth,
     });
 
     // saving the user to the database
