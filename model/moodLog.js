@@ -35,7 +35,7 @@ const MoodLogSchema = new Schema({
     }
   },
   reasonText: {
-    type: String,
+    type: String, 
     trim: true,
     default: ''
   },
