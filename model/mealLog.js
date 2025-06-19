@@ -5,6 +5,11 @@ const mealSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  mealType: {
+  type: String,
+  enum: ['breakfast', 'lunch', 'dinner', 'snack'],
+  required: false
+},
   hungerBefore: {
     type: Number,
     required: true,
