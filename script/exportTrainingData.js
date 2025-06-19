@@ -9,8 +9,11 @@ function mapPortionSize(size) {
   return portionSizeMap[size?.toLowerCase()] ?? 1;
 }
 
+// Use environment variable for MongoDB URI, with a default for local development
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mindfulleats_dev_db';
+
 async function run() {
-  await mongoose.connect('mongodb://localhost:27017/your-db-name');
+  await mongoose.connect(MONGODB_URI);
 
   const allData = [];
   const users = await Meal.distinct('userId');
