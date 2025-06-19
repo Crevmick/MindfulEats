@@ -1,4 +1,6 @@
 import Meal from '../model/mealLog.js'; // Adjusted path
+// Assuming MoodLog model might be needed if we want to map moodScore to names, but not strictly required for this logic yet
+// import MoodLog from '../model/moodLog.js';
 
 const foodToCategory = {
   // Fruits
@@ -25,18 +27,18 @@ const foodToCategory = {
   "potato": "vegetable_starchy",
   "sweet potato": "vegetable_starchy",
   // Grains
-  "bread": "grain", // general bread
+  "bread": "grain",
   "white bread": "grain_refined",
   "whole wheat bread": "grain_whole",
-  "rice": "grain", // general rice
+  "rice": "grain",
   "white rice": "grain_refined",
   "brown rice": "grain_whole",
-  "pasta": "grain", // general pasta, can be refined
+  "pasta": "grain",
   "whole wheat pasta": "grain_whole",
   "oats": "grain_whole",
   "quinoa": "grain_whole",
-  "cereal": "grain", // general cereal
-  "sugary cereal": "sweets", // more specific
+  "cereal": "grain",
+  "sugary cereal": "sweets",
   // Proteins
   "chicken": "protein",
   "beef": "protein",
@@ -45,8 +47,8 @@ const foodToCategory = {
   "salmon": "protein",
   "tuna": "protein",
   "eggs": "protein",
-  "beans": "protein_plant", // also a legume/vegetable
-  "lentils": "protein_plant", // also a legume/vegetable
+  "beans": "protein_plant",
+  "lentils": "protein_plant",
   "tofu": "protein_plant",
   "tempeh": "protein_plant",
   // Dairy & Alternatives
@@ -59,23 +61,26 @@ const foodToCategory = {
   // Fats & Oils
   "butter": "fat",
   "olive oil": "fat",
-  "avocado": "fat", // also a fruit
-  "nuts": "fat_healthy", // e.g., almonds, walnuts, cashews
-  "seeds": "fat_healthy", // e.g., chia seeds, flax seeds, sunflower seeds
+  "avocado": "fat",
+  "nuts": "fat_healthy",
+  "seeds": "fat_healthy",
   // Sweets & Processed Snacks
   "cake": "sweets",
   "cookies": "sweets",
   "ice cream": "sweets",
-  "chocolate": "sweets", // dark chocolate can be okay, but generally sugary
+  "chocolate": "sweets",
   "candy": "sweets",
   "pastry": "sweets",
-  "chips": "snacks_processed",
+  "chips": "snacks_processed", // snacks_processed is a good category for "comfort food"
   "soda": "beverage_sugary",
   // Beverages
   "water": "beverage",
   "coffee": "beverage",
   "tea": "beverage",
 };
+
+// Helper to map mood scores to descriptive names if needed (currently not used by detectEmotionalEating directly for user moods)
+// const userMoodScoreToName = { 1: 'Very Negative', 2: 'Negative', 3: 'Neutral', 4: 'Positive', 5: 'Very Positive' };
 
 function getFoodCategory(foodName) {
   if (!foodName) {
@@ -108,95 +113,160 @@ function mapPortionToQuantitative(portionString) {
 }
 
 function detectFrequentSnacking(meals, actualDaysWithLogging) {
-  if (!meals || meals.length === 0 || actualDaysWithLogging === 0) {
-    return null;
-  }
+  if (!meals || meals.length === 0 || actualDaysWithLogging === 0) return null;
   const snacks = meals.filter(meal => meal.mealType === 'snack');
   const totalSnacks = snacks.length;
   const avgSnacks = totalSnacks / actualDaysWithLogging;
-
   if (avgSnacks > 2) {
-    return {
-      name: "Frequent Snacking",
-      detected: true,
-      details: `Average of ${avgSnacks.toFixed(1)} snacks per day over ${actualDaysWithLogging} day(s) with logs.`
-    };
+    return { name: "Frequent Snacking", detected: true, details: `Average of ${avgSnacks.toFixed(1)} snacks per day over ${actualDaysWithLogging} day(s) with logs.` };
   }
   return null;
 }
 
 function detectSkippingBreakfast(meals, actualDaysWithLogging) {
-  if (!meals || meals.length === 0 || actualDaysWithLogging === 0) {
-    return null;
-  }
-
+  if (!meals || meals.length === 0 || actualDaysWithLogging === 0) return null;
   const mealsByDate = {};
   meals.forEach(meal => {
     const mealDate = new Date(meal.createdAt).toISOString().split('T')[0];
-    if (!mealsByDate[mealDate]) {
-      mealsByDate[mealDate] = [];
-    }
+    if (!mealsByDate[mealDate]) mealsByDate[mealDate] = [];
     mealsByDate[mealDate].push(meal);
   });
-
   const uniqueLoggingDays = Object.keys(mealsByDate).length;
   if (uniqueLoggingDays === 0) return null;
-
   let skippedBreakfastDays = 0;
   for (const date in mealsByDate) {
-    const hasBreakfast = mealsByDate[date].some(meal => meal.mealType === 'breakfast');
-    if (!hasBreakfast) {
-      skippedBreakfastDays++;
-    }
+    if (!mealsByDate[date].some(meal => meal.mealType === 'breakfast')) skippedBreakfastDays++;
   }
-
   if (skippedBreakfastDays > uniqueLoggingDays * 0.4) {
-    return {
-      name: "Skipping Breakfast",
-      detected: true,
-      details: `Skipped breakfast on ${skippedBreakfastDays} out of ${uniqueLoggingDays} day(s) with logs.`
-    };
+    return { name: "Skipping Breakfast", detected: true, details: `Skipped breakfast on ${skippedBreakfastDays} out of ${uniqueLoggingDays} day(s) with logs.` };
   }
   return null;
 }
 
 function detectHighIntake(meals, targetCategory, categoryDisplayName, mealFrequencyThreshold) {
-  if (!meals || meals.length === 0) {
-    return null;
-  }
-  const mealsWithCategory = meals.map(meal => ({
-    ...meal,
-    foodCategory: meal.foodCategory || getFoodCategory(meal.predictedFoodName)
-  }));
-
+  if (!meals || meals.length === 0) return null;
+  const mealsWithCategory = meals.map(meal => ({ ...meal, foodCategory: meal.foodCategory || getFoodCategory(meal.predictedFoodName) }));
   const matchingMeals = mealsWithCategory.filter(meal => meal.foodCategory === targetCategory);
   const percentage = matchingMeals.length / meals.length;
-
   if (percentage > mealFrequencyThreshold) {
-    return {
-      name: `High Intake of ${categoryDisplayName}`,
-      detected: true,
-      details: `${(percentage * 100).toFixed(0)}% of logged meals included ${categoryDisplayName}.`
-    };
+    return { name: `High Intake of ${categoryDisplayName}`, detected: true, details: `${(percentage * 100).toFixed(0)}% of logged meals included ${categoryDisplayName}.` };
   }
   return null;
 }
 
 function analyzeOverallCarbIntake(meals) {
-  if (!meals || meals.length === 0) {
-    return null;
-  }
+  if (!meals || meals.length === 0) return null;
   const sugarySnackPattern = detectHighIntake(meals, 'sweets', 'Sugary Foods/Snacks', 0.2);
-  if (sugarySnackPattern) {
-    return sugarySnackPattern;
-  }
-
+  if (sugarySnackPattern) return sugarySnackPattern;
   const refinedGrainPattern = detectHighIntake(meals, 'grain_refined', 'Refined Grains', 0.3);
-  if (refinedGrainPattern) {
-    return refinedGrainPattern;
-  }
+  if (refinedGrainPattern) return refinedGrainPattern;
   return null;
 }
+
+function detectEmotionalEating(meals) {
+    const detectedPatterns = [];
+    if (!meals || meals.length === 0) return detectedPatterns;
+
+    // Define mood scores that are considered negative (e.g., 1 or 2 on a 1-5 scale)
+    // This needs to align with how MoodLog.moodScore is defined and used.
+    // For this example, let's assume moodScore is 1-5, where 1 and 2 are negative.
+    const negativeUserMoodScores = [1, 2];
+    // For user-facing messages, mapping score to a name would be better if available from MoodLog model.
+    // E.g. if moodLogId.mood is "Sad", "Anxious", "Frustrated".
+    // For now, we'll use a generic "Negative User-Logged Mood" or the score itself.
+
+    const comfortFoodCategories = ['sweets', 'snacks_processed'];
+    const negativePredictedMoods = ['Frustrated', 'Sad', 'Anxious']; // From TF model output
+
+    const MIN_OCCURRENCES = 3; // Min times a mood or category must appear to be considered for a pattern
+    const SIGNIFICANT_COOCCURRENCE_THRESHOLD = 0.5; // 50%
+
+    // Correlation 1: User-logged negative mood -> Comfort Food
+    const moodToComfortFoodStats = {}; // Stores { moodScore: { total: 0, comfort: 0, categoryCounts: {} } }
+
+    meals.forEach(meal => {
+        if (meal.moodLogId && meal.moodLogId.moodScore && negativeUserMoodScores.includes(meal.moodLogId.moodScore)) {
+            const moodScore = meal.moodLogId.moodScore;
+            // Using moodScore directly; ideally, map this to a mood name like "Sad" if MoodLog has it.
+            const moodIdentifier = `User-Logged Mood (Score ${moodScore})`;
+
+            if (!moodToComfortFoodStats[moodIdentifier]) {
+                moodToComfortFoodStats[moodIdentifier] = { total: 0, comfort: 0, categoryCounts: {} };
+            }
+            moodToComfortFoodStats[moodIdentifier].total++;
+
+            const currentFoodCategory = meal.foodCategory || getFoodCategory(meal.predictedFoodName);
+            if (comfortFoodCategories.includes(currentFoodCategory)) {
+                moodToComfortFoodStats[moodIdentifier].comfort++;
+                moodToComfortFoodStats[moodIdentifier].categoryCounts[currentFoodCategory] = (moodToComfortFoodStats[moodIdentifier].categoryCounts[currentFoodCategory] || 0) + 1;
+            }
+        }
+    });
+
+    for (const mood in moodToComfortFoodStats) {
+        const stats = moodToComfortFoodStats[mood];
+        if (stats.total >= MIN_OCCURRENCES && (stats.comfort / stats.total) >= SIGNIFICANT_COOCCURRENCE_THRESHOLD) {
+            // Find the most common comfort category for this mood
+            let mostCommonCat = "";
+            let maxCount = 0;
+            for(const cat in stats.categoryCounts) {
+                if(stats.categoryCounts[cat] > maxCount) {
+                    maxCount = stats.categoryCounts[cat];
+                    mostCommonCat = cat;
+                }
+            }
+            if (mostCommonCat) { // Ensure there was at least one comfort food
+                 detectedPatterns.push({
+                    name: `Emotional Eating: ${mood} and ${mostCommonCat}`,
+                    detected: true,
+                    details: `Often consumed '${mostCommonCat}' when ${mood.toLowerCase()} was reported (${stats.comfort} out of ${stats.total} instances).`
+                });
+            }
+        }
+    }
+
+    // Correlation 2: Comfort Food -> Predicted Negative Mood
+    const comfortFoodToNegativePredictionStats = {}; // { foodCategory: { total: 0, negativePrediction: 0, predictionCounts: {} } }
+
+    meals.forEach(meal => {
+        const currentFoodCategory = meal.foodCategory || getFoodCategory(meal.predictedFoodName);
+        if (comfortFoodCategories.includes(currentFoodCategory)) {
+            if (!comfortFoodToNegativePredictionStats[currentFoodCategory]) {
+                comfortFoodToNegativePredictionStats[currentFoodCategory] = { total: 0, negativePrediction: 0, predictionCounts: {} };
+            }
+            comfortFoodToNegativePredictionStats[currentFoodCategory].total++;
+
+            if (meal.predictedPostMealMood && negativePredictedMoods.includes(meal.predictedPostMealMood)) {
+                comfortFoodToNegativePredictionStats[currentFoodCategory].negativePrediction++;
+                const predMood = meal.predictedPostMealMood;
+                comfortFoodToNegativePredictionStats[currentFoodCategory].predictionCounts[predMood] = (comfortFoodToNegativePredictionStats[currentFoodCategory].predictionCounts[predMood] || 0) + 1;
+            }
+        }
+    });
+
+    for (const category in comfortFoodToNegativePredictionStats) {
+        const stats = comfortFoodToNegativePredictionStats[category];
+        if (stats.total >= MIN_OCCURRENCES && (stats.negativePrediction / stats.total) >= SIGNIFICANT_COOCCURRENCE_THRESHOLD) {
+            let mostCommonPredMood = "";
+            let maxCount = 0;
+             for(const predMood in stats.predictionCounts) {
+                if(stats.predictionCounts[predMood] > maxCount) {
+                    maxCount = stats.predictionCounts[predMood];
+                    mostCommonPredMood = predMood;
+                }
+            }
+            if(mostCommonPredMood){ // Ensure there was at least one negative predicted mood
+                detectedPatterns.push({
+                    name: `Pattern: ${category} and Negative Predicted Mood`,
+                    detected: true,
+                    details: `Consuming '${category}' was often followed by a predicted mood of '${mostCommonPredMood}' (${stats.negativePrediction} out of ${stats.total} instances where ${category} was eaten).`
+                });
+            }
+        }
+    }
+    return detectedPatterns;
+}
+
 
 function generateInsights(detectedPatterns) {
   const insights = [];
@@ -230,8 +300,19 @@ function generateInsights(detectedPatterns) {
           case "High Intake of Sugary Beverages":
               insightMsg = `Sugary drinks are noted in your logs: ${pattern.details}. Water or unsweetened beverages are healthier choices for hydration.`;
               break;
+          // Insights for Emotional Eating
           default:
-              if (pattern.name && pattern.name.startsWith("High Intake of")) {
+              if (pattern.name && pattern.name.startsWith("Emotional Eating:")) {
+                  // Example: "Emotional Eating: User-Logged Mood (Score 2) and sweets"
+                  const parts = pattern.name.replace("Emotional Eating: ", "").split(" and ");
+                  const moodPart = parts[0]; // e.g., "User-Logged Mood (Score 2)" or potentially a mood name
+                  const foodPart = parts[1];
+                  insightMsg = `It appears that when you reported ${moodPart.toLowerCase()}, you often consumed '${foodPart}'. ${pattern.details} Recognizing this pattern is the first step to finding alternative coping strategies or healthier comfort options.`;
+              } else if (pattern.name && pattern.name.startsWith("Pattern:") && pattern.name.includes("and Negative Predicted Mood")) {
+                  // Example: "Pattern: sweets and Negative Predicted Mood"
+                  const foodPart = pattern.name.replace("Pattern: ", "").split(" and Negative Predicted Mood")[0];
+                  insightMsg = `Our analysis suggests that consuming '${foodPart}' may often be followed by less positive predicted moods. ${pattern.details} This could be due to factors like energy crashes or nutrient imbalances.`;
+              } else if (pattern.name && pattern.name.startsWith("High Intake of")) {
                 insightMsg = `${pattern.name} was noted: ${pattern.details}. Reflect on how this aligns with your dietary goals.`;
               } else {
                 insightMsg = `A pattern regarding '${pattern.name}' was noted: ${pattern.details}. Reflect on how this aligns with your dietary goals.`;
@@ -240,9 +321,16 @@ function generateInsights(detectedPatterns) {
       if (insightMsg) insights.push(insightMsg);
   });
 
-  if (positiveDetections === 0) {
+  if (positiveDetections === 0 && insights.length === 0) { // Check insights.length too in case default cases didn't add anything
       insights.push("Your dietary habits seem balanced based on the patterns we track. Well done!");
+  } else if (positiveDetections > 0 && insights.length === 0) {
+      // This case might occur if new patterns are detected but don't have specific insight messages yet
+      insights.push("Several dietary patterns were noted. Review them to understand your eating habits better.");
+  } else if (positiveDetections === 0 && insights.length > 0){
+      // This case means some default message was already added, no need for another one.
   }
+
+
   return insights;
 }
 
@@ -278,8 +366,17 @@ function generateRecommendations(detectedPatterns) {
             case "High Intake of Sugary Beverages":
                 recMsg = "Choose water, unsweetened tea, or sparkling water with a splash of fruit for hydration instead of sugary drinks. Keep a water bottle nearby as a reminder.";
                 break;
+            // Recommendations for Emotional Eating
             default:
-                 if (pattern.name && pattern.name.startsWith("High Intake of")) {
+                 if (pattern.name && pattern.name.startsWith("Emotional Eating:")) {
+                    const parts = pattern.name.replace("Emotional Eating: ", "").split(" and ");
+                    const moodPart = parts[0];
+                    const foodPart = parts[1];
+                    recMsg = `When experiencing ${moodPart.toLowerCase()}, try exploring non-food related activities you enjoy, like listening to music, a short walk, or talking to a friend. If you do seek comfort in food, consider if options like a piece of fruit, a warm herbal tea, or a small portion of nuts might also satisfy.`;
+                } else if (pattern.name && pattern.name.startsWith("Pattern:") && pattern.name.includes("and Negative Predicted Mood")) {
+                    const foodPart = pattern.name.replace("Pattern: ", "").split(" and Negative Predicted Mood")[0];
+                    recMsg = `For '${foodPart}', which seems linked to less positive predicted moods, consider reducing its intake or pairing it with protein or fiber (like nuts or fruit) to potentially stabilize energy levels. Experiment to see if this influences your subsequent mood positively.`;
+                } else if (pattern.name && pattern.name.startsWith("High Intake of")) {
                     recMsg = `For your intake of ${pattern.name.substring(15)}, consider exploring healthier alternatives or adjusting portion sizes. Small changes can make a big difference.`;
                 } else {
                     recMsg = `For the pattern '${pattern.name}', consider exploring healthier alternatives or adjusting portion sizes. Small changes can make a big difference.`;
@@ -288,9 +385,15 @@ function generateRecommendations(detectedPatterns) {
         if (recMsg) recommendations.push(recMsg);
     });
 
-    if (positiveDetections === 0) {
+    if (positiveDetections === 0 && recommendations.length === 0) {
         recommendations.push("Your current logs show balanced habits according to our tracked patterns. Keep up the great work and continue exploring nutritious food choices!");
+    } else if (positiveDetections > 0 && recommendations.length === 0) {
+         recommendations.push("Review the detected patterns and consider making small, sustainable changes towards your health goals.");
+    } else if (positiveDetections === 0 && recommendations.length > 0) {
+        // Default message already added.
     }
+
+
     return recommendations;
 }
 
@@ -303,17 +406,30 @@ async function analyzeDietaryPatterns(userId, daysToAnalyze = 7) {
     const meals = await Meal.find({
       userId: userId,
       createdAt: { $gte: startDate }
-    }).lean();
+    }).populate('moodLogId').lean();
 
     if (!meals || meals.length === 0) {
-      return { patterns: [], insights: generateInsights([]), recommendations: generateRecommendations([]), summary: "No meal data found for the selected period." };
+      return {
+        patterns: [],
+        insights: ["No meal data found for the selected period. Start logging your meals to get an analysis."],
+        recommendations: ["Log your meals and moods regularly to get started."],
+        summary: "No meal data found for the selected period."
+      };
     }
 
     const mealDates = meals.map(meal => new Date(meal.createdAt).toISOString().split('T')[0]);
     const actualDaysWithLogging = new Set(mealDates).size;
 
-    if (actualDaysWithLogging === 0) {
-        return { patterns: [], insights: generateInsights([]), recommendations: generateRecommendations([]), summary: "No meal logs found for the specified period." };
+    const MIN_LOGGING_DAYS = 5;
+    const MIN_TOTAL_MEALS = 10;
+
+    if (actualDaysWithLogging < MIN_LOGGING_DAYS && meals.length < MIN_TOTAL_MEALS) {
+      return {
+        patterns: [],
+        insights: [`Log meals and moods for at least ${MIN_LOGGING_DAYS} different days (or a total of ${MIN_TOTAL_MEALS} meals) to receive personalized dietary patterns and insights. You currently have ${actualDaysWithLogging} day(s) with logs and ${meals.length} total meals.`],
+        recommendations: ["Continue logging your meals and moods regularly to unlock your personalized analysis."],
+        summary: `Insufficient data for full analysis. Please log for at least ${MIN_LOGGING_DAYS} days or ${MIN_TOTAL_MEALS} meals.`
+      };
     }
 
     const detectedPatterns = [];
@@ -337,6 +453,11 @@ async function analyzeDietaryPatterns(userId, daysToAnalyze = 7) {
       }
     }
 
+    const emotionalPatterns = detectEmotionalEating(meals);
+    if (emotionalPatterns && emotionalPatterns.length > 0) {
+      detectedPatterns.push(...emotionalPatterns);
+    }
+
     const insights = generateInsights(detectedPatterns);
     const recommendations = generateRecommendations(detectedPatterns);
     return { patterns: detectedPatterns, insights: insights, recommendations: recommendations };
@@ -354,8 +475,9 @@ module.exports = {
   detectSkippingBreakfast,
   detectHighIntake,
   analyzeOverallCarbIntake,
+  detectEmotionalEating, // Export the new function
   analyzeDietaryPatterns,
   generateInsights,
-  generateRecommendations, // Export the new function
+  generateRecommendations,
   foodToCategory
 };
