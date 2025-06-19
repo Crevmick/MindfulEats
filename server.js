@@ -12,7 +12,7 @@ import connectDB from './Config/db.js';
 import signUpRoute from './routes/Auth/signup.js';  // Import signUpRoute for user registration
 import signInRoute from './routes/Auth/signin.js';  // Import signInRoute for user login
 import userRoutes from './routes/Auth/users.js'; 
-
+import dietaryAnalysisRouter from './routes/Analysis/dietaryAnalysisRoute.js';
 
 
 //importing DB
@@ -47,6 +47,7 @@ app.use('/auth', authRouter); // This will handle /auth/google and /auth/google/
 app.use('/api/auth/signup', signUpRoute);
 app.use('/api/auth/signin', signInRoute);
 app.use('/api/auth/users', userRoutes); // Route to get all users
+app.use('/api/dietary-analysis', dietaryAnalysisRouter);
 
 
 // Serve static files from uploads folder
