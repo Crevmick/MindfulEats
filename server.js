@@ -21,10 +21,11 @@ import userRoutes from './routes/Auth/users.js';
 //importing route
 import authRouter from './routes/Auth/GoogleRoute.js';  // Import authRouter for Google login
 
+import moodLogRoutes from './routes/Auth/moodLogRoute.js'; // Import mood log routes
 dotenv.config();
 
 //connect DB 
-connectDB();
+connectDB();  
 
 
 
@@ -37,7 +38,7 @@ app.use(morgan('dev'));
 app.use(cors());
 app.use(helmet()); //  To secure HTTP headers
 app.use(cookieParser());
-
+app.use('/api/moodlogs', moodLogRoutes); // Import and use mood log routes
 
 // Mount routes for Google authentication
 app.use('/auth', authRouter); // This will handle /auth/google and /auth/google/callback
