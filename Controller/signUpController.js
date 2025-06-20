@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { check, validationResult } from 'express-validator';
 import User from '../model/User.js';
 import createToken from '../util/createToken.js';
-import sendOTP from '../util/sendOTP.js';
+import sendOTP from '../util/OTPsender.js';
 
 // Validation rules for user registration
 export const registerUserValidationRules = () => {

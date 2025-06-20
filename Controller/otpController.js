@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import User from '../model/User.js';
 import UserOTPVerification from '../model/UserOTPVerification.js';
 import createToken from '../util/createToken.js';
-import sendOTP from '../util/sendOTP.js';
+import sendOTP from '../util/OTPsender.js';
 
 export const verifyOTP = async (req, res) => {
   try {
