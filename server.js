@@ -15,7 +15,8 @@ import userRoutes from './routes/Auth/users.js';
 import dietaryAnalysisRouter from './routes/Analysis/dietaryAnalysisRoute.js';
 import insightRouter from './routes/Insights/insightRoutes.js';
 import mealRoutes from './routes/Meal/mealRoute.js';
-import passwordResetRoutes from './routes/Auth/forgetPasswordRoute.js'; // or the correct path to your route file
+import passwordResetRoutes from './routes/Auth/forgetPasswordRoute.js'; 
+import otpRoute from './routes/Auth/otpRoute.js';
 
 
 //importing DB
@@ -45,14 +46,15 @@ app.use(cookieParser());
 app.use('/auth', authRouter); // This will handle /auth/google and /auth/google/callback
 
 // mounting Routes
-app.use('/api/auth/signup', signUpRoute);
-app.use('/api/auth/signin', signInRoute);
+app.use('/api/auth/', signUpRoute);
+app.use('/api/auth/', signInRoute);
 app.use('/api/auth/users', userRoutes); // Route to get all users
 app.use('/api/dietary-analysis', dietaryAnalysisRouter);
 app.use('/api/insights', insightRouter);
 app.use('/api/meals', mealRoutes); // Import and use meal routes
 app.use('/api/moodlogs', moodLogRoutes); // Import and use mood log routes
 app.use('/api/auth', passwordResetRoutes);
+app.use('/api/auth', otpRoute);
 
 
 

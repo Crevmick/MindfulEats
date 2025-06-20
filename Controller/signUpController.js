@@ -34,9 +34,9 @@ export const signUp = async (req, res) => {
   try {
     let { fullName, email, password } = req.body;
 
-    name = name?.trim();
-    email = email?.trim();
-    password = password?.trim();
+    fullName = fullName.trim();
+    email = email.trim();
+    password = password.trim();
 
     const existingUser = await User.findOne({ email });
 
@@ -44,22 +44,25 @@ export const signUp = async (req, res) => {
       return res.status(409).json({ status: 'FAILED', errors: [{ msg: 'Email already exists!' }] });
     }
 
-     //this helps to validate hashed password
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // create user
+    // Create user
     const newUser = new User({
-      name,
+      fullName,
       email,
       password: hashedPassword,
     });
 
-    // saving the user to the database
+    // Save the user to the database
     const savedUser = await newUser.save();
 
+    // Send OTP
     const otpResponse = await sendOTP({ _id: savedUser._id, email: savedUser.email });
 
     if (!otpResponse.success) {
+      // Remove the user if OTP sending fails
+      await User.findByIdAndDelete(savedUser._id);
       return res.status(500).json({
         status: 'FAILED',
         message: otpResponse.message || 'Failed to send OTP.',
@@ -72,9 +75,10 @@ export const signUp = async (req, res) => {
       status: 'SUCCESS',
       message: 'Signup successful. OTP sent to email.',
       token,
+      id: savedUser._id,
+      fullName: savedUser.fullName,
       email: savedUser.email,
       verified: savedUser.verified,
-      role: savedUser.role,
       otpInfo: otpResponse.data,
     });
   } catch (error) {
@@ -85,5 +89,3 @@ export const signUp = async (req, res) => {
     });
   }
 };
-
-

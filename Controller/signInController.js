@@ -1,5 +1,5 @@
 import User from '../model/User.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import createToken from '../util/createToken.js';
 
 export const signIn = async (req, res) => {
@@ -19,7 +19,7 @@ export const signIn = async (req, res) => {
     }
 
     // Generate JWT token
-    const token = createToken(user);
+    const token = await createToken(user);
 
     // Respond with token and user info (omit password)
     const { password: _, ...userData } = user.toObject();
