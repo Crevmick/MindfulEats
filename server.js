@@ -14,6 +14,8 @@ import signInRoute from './routes/Auth/signin.js';  // Import signInRoute for us
 import userRoutes from './routes/Auth/users.js'; 
 import dietaryAnalysisRouter from './routes/Analysis/dietaryAnalysisRoute.js';
 import insightRouter from './routes/Insights/insightRoutes.js';
+import mealRoutes from './routes/Meal/mealRoute.js';
+import passwordResetRoutes from './routes/Auth/forgetPasswordRoute.js'; // or the correct path to your route file
 
 
 //importing DB
@@ -21,7 +23,6 @@ import insightRouter from './routes/Insights/insightRoutes.js';
 
 //importing route
 import authRouter from './routes/Auth/GoogleRoute.js';  // Import authRouter for Google login
-
 import moodLogRoutes from './routes/Auth/moodLogRoute.js'; // Import mood log routes
 dotenv.config();
 
@@ -39,17 +40,21 @@ app.use(morgan('dev'));
 app.use(cors());
 app.use(helmet()); //  To secure HTTP headers
 app.use(cookieParser());
-app.use('/api/moodlogs', moodLogRoutes); // Import and use mood log routes
 
 // Mount routes for Google authentication
 app.use('/auth', authRouter); // This will handle /auth/google and /auth/google/callback
 
-// Routes
+// mounting Routes
 app.use('/api/auth/signup', signUpRoute);
 app.use('/api/auth/signin', signInRoute);
 app.use('/api/auth/users', userRoutes); // Route to get all users
 app.use('/api/dietary-analysis', dietaryAnalysisRouter);
 app.use('/api/insights', insightRouter);
+app.use('/api/meals', mealRoutes); // Import and use meal routes
+app.use('/api/moodlogs', moodLogRoutes); // Import and use mood log routes
+app.use('/api/auth', passwordResetRoutes);
+
+
 
 
 // Serve static files from uploads folder

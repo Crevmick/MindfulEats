@@ -1,6 +1,4 @@
-import Meal from '../model/mealLog.js'; // Adjusted path
-// Assuming MoodLog model might be needed if we want to map moodScore to names, but not strictly required for this logic yet
-// import MoodLog from '../model/moodLog.js';
+import Meal from '../model/mealLog.js'; 
 
 const foodToCategory = {
   // Fruits
@@ -71,7 +69,7 @@ const foodToCategory = {
   "chocolate": "sweets",
   "candy": "sweets",
   "pastry": "sweets",
-  "chips": "snacks_processed", // snacks_processed is a good category for "comfort food"
+  "chips": "snacks_processed", 
   "soda": "beverage_sugary",
   // Beverages
   "water": "beverage",
@@ -468,14 +466,15 @@ async function analyzeDietaryPatterns(userId, daysToAnalyze = 7) {
   }
 }
 
-module.exports = {
+
+export {
   getFoodCategory,
   mapPortionToQuantitative,
   detectFrequentSnacking,
   detectSkippingBreakfast,
   detectHighIntake,
   analyzeOverallCarbIntake,
-  detectEmotionalEating, // Export the new function
+  detectEmotionalEating,
   analyzeDietaryPatterns,
   generateInsights,
   generateRecommendations,

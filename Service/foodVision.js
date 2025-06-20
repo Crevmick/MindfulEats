@@ -1,5 +1,5 @@
 import { ClarifaiStub, grpc } from 'clarifai-nodejs-grpc';
-import { fallbackFoodClassifier } from './localFood101Classifier.js';
+import { fallbackFoodClassifier } from '../util/localFood101Classifier.js';
 
 const stub = ClarifaiStub.grpc();
 const metadata = new grpc.Metadata();

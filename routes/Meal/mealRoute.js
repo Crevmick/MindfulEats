@@ -1,32 +1,11 @@
-import { ClarifaiStub, grpc } from 'clarifai-nodejs-grpc';
-import { fallbackFoodClassifier } from './localFood101Classifier.js';
+import express from 'express';
+import { uploadMeal } from '../../Controller/mealController.js';
+import  authenticateUser  from '../../middleware/authenticateUser.js';
 
-const stub = ClarifaiStub.grpc();
-const metadata = new grpc.Metadata();
-metadata.set("authorization", "Key " + process.env.CLARIFAI_API_KEY);
 
-export async function detectFoodNameFromImage(imageUrl) {
-  return new Promise((resolve, reject) => {
-    stub.PostModelOutputs(
-      {
-        model_id: "food-item-recognition",
-        inputs: [{ data: { image: { url: imageUrl } } }]
-      },
-      metadata,
-      async (err, response) => {
-        if (err || response.status.code !== 10000) {
-          const fallback = await fallbackFoodClassifier(imageUrl);
-          return resolve(fallback);
-        }
+const router = express.Router();
+// @route   POST /api/meals/upload
+// @desc    Upload a meal image and associated data, then analyze it
+router.post('/upload', authenticateUser, uploadMeal); 
 
-        const top = response.outputs[0].data.concepts[0];
-        if (!top || top.value < 0.75) {
-          const fallback = await fallbackFoodClassifier(imageUrl);
-          return resolve(fallback);
-        }
-
-        return resolve(top.name || 'unknown');
-      }
-    );
-  });
-}
+export default router;

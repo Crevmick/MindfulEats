@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const mealSchema = new mongoose.Schema({
   portionSize: {
@@ -56,4 +56,4 @@ const mealSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('Meal', mealSchema);
+export default mongoose.model('Meal', mealSchema);

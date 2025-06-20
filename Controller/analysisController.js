@@ -2,7 +2,7 @@ import { analyzeDietaryPatterns } from '../Service/dietaryPatternService.js';
 
 export const getDietaryAnalysis = async (req, res) => {
   try {
-    const userId = req.user._id; // Assuming authenticateUser middleware populates req.user
+    const userId = req.user._id; 
 
     let daysToAnalyze = 7; // Default value for the older endpoint
     if (req.query.days) {
