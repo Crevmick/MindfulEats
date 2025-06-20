@@ -11,16 +11,13 @@ import { fileURLToPath } from 'url';
 import connectDB from './Config/db.js';
 import signUpRoute from './routes/Auth/signup.js';  // Import signUpRoute for user registration
 import signInRoute from './routes/Auth/signin.js';  // Import signInRoute for user login
-import userRoutes from './routes/Auth/users.js'; 
+import userRoutes from './routes/Auth/Users.js'; 
 import dietaryAnalysisRouter from './routes/Analysis/dietaryAnalysisRoute.js';
 import insightRouter from './routes/Insights/insightRoutes.js';
 import mealRoutes from './routes/Meal/mealRoute.js';
 import passwordResetRoutes from './routes/Auth/forgetPasswordRoute.js'; 
 import otpRoute from './routes/Auth/otpRoute.js';
 
-
-//importing DB
-// import connectDB from './Config/db.js';
 
 //importing route
 import authRouter from './routes/Auth/GoogleRoute.js';  // Import authRouter for Google login
