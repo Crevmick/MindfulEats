@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Importing database connection and routes
 import connectDB from './Config/db.js';
 import signUpRoute from './routes/Auth/signup.js';  // Import signUpRoute for user registration
 import signInRoute from './routes/Auth/signin.js';  // Import signInRoute for user login
