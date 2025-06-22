@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { getPredictedMood } from '../Service/moodPredictionService.js'; // Adjust path as necessary
+import { getPredictedMood } from '../Service/moodPredictionService.js'; 
 
 // This test suite assumes that './trained_model/model.json' and related files exist
 // and are loadable by TensorFlow.js, as getPredictedMood calls the actual prediction script.

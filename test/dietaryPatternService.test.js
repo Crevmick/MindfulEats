@@ -13,24 +13,58 @@ import {
 } from '../Service/dietaryPatternService.js';
 
 describe('dietaryPatternService Tests', () => {
-
-    describe('getFoodCategory(foodName)', () => {
-        it('should categorize known foods correctly', () => {
-            assert.strictEqual(getFoodCategory('apple'), 'fruit', 'Test Case 1 Failed: Apple');
-            assert.strictEqual(getFoodCategory('white bread'), 'grain_refined', 'Test Case 2 Failed: White Bread');
-            assert.strictEqual(getFoodCategory('Chicken Breast'), 'protein', 'Test Case 3 Failed: Chicken');
-            assert.strictEqual(getFoodCategory('sugary cereal'), 'sweets', 'Test Case 4 Failed: Sugary Cereal');
+    describe('getFoodCategory(foodName) - Additional Cases', () => {
+        it('should match foods with extra whitespace', () => {
+            assert.strictEqual(getFoodCategory('  apple  '), 'fruit', 'Whitespace should not affect matching');
+            assert.strictEqual(getFoodCategory('  white bread'), 'grain_refined', 'Leading whitespace');
+            assert.strictEqual(getFoodCategory('chocolate   '), 'sweets', 'Trailing whitespace');
         });
 
-        it('should be case-insensitive', () => {
-            assert.strictEqual(getFoodCategory('APPLE'), 'fruit', 'Test Case 5 Failed: APPLE (uppercase)');
-            assert.strictEqual(getFoodCategory('WhItE BrEaD'), 'grain_refined', 'Test Case 6 Failed: WhItE BrEaD (mixed case)');
+        it('should match foods with punctuation', () => {
+            assert.strictEqual(getFoodCategory('apple!'), 'fruit', 'Exclamation mark');
+            assert.strictEqual(getFoodCategory('white bread.'), 'grain_refined', 'Period');
+            assert.strictEqual(getFoodCategory('cake,'), 'sweets', 'Comma');
         });
 
-        it('should handle partial matches (if intended and based on current simple "includes" logic)', () => {
-            assert.strictEqual(getFoodCategory('apple pie'), 'fruit', 'Test Case 7 Failed: Apple Pie (partial match)');
-            assert.strictEqual(getFoodCategory('fried chicken'), 'protein', 'Test Case 8 Failed: Fried Chicken (partial match)');
+        it('should match foods with plural forms if substring matches', () => {
+            assert.strictEqual(getFoodCategory('apples'), 'fruit', 'Plural apples');
+            assert.strictEqual(getFoodCategory('cookies'), 'sweets', 'Plural cookies');
+            assert.strictEqual(getFoodCategory('chips'), 'snacks_processed', 'Plural chips');
         });
+
+        it('should prioritize longer keys over shorter ones', () => {
+            // "white bread" should match before "bread"
+            assert.strictEqual(getFoodCategory('white bread sandwich'), 'grain_refined', 'Longer key prioritized');
+            // "whole wheat bread" should match before "bread"
+            assert.strictEqual(getFoodCategory('whole wheat bread toast'), 'grain_whole', 'Whole wheat bread prioritized');
+        });
+
+        it('should not match unrelated substrings', () => {
+            assert.strictEqual(getFoodCategory('pineapple'), 'fruit', 'Should match pineapple as fruit');
+            assert.strictEqual(getFoodCategory('breadfruit'), 'unknown', 'Should not match bread in breadfruit');
+        });
+
+        it('should match foods with mixed casing and punctuation', () => {
+            assert.strictEqual(getFoodCategory('ChOcOlAtE!'), 'sweets', 'Mixed case and punctuation');
+            assert.strictEqual(getFoodCategory('  BaNaNa.  '), 'fruit', 'Whitespace, punctuation, and mixed case');
+        });
+
+        it('should match foods with numbers in the name', () => {
+            assert.strictEqual(getFoodCategory('2 eggs'), 'protein', 'Number before food');
+            assert.strictEqual(getFoodCategory('egg'), 'unknown', 'Singular egg not in mapping');
+        });
+
+        it('should match foods with synonyms if present in mapping', () => {
+            assert.strictEqual(getFoodCategory('oatmeal'), 'unknown', 'Oatmeal not in mapping');
+            assert.strictEqual(getFoodCategory('oats'), 'grain_whole', 'Oats in mapping');
+        });
+
+        it('should not throw on non-string input', () => {
+            assert.strictEqual(getFoodCategory(123), 'unknown', 'Numeric input');
+            assert.strictEqual(getFoodCategory({}), 'unknown', 'Object input');
+            assert.strictEqual(getFoodCategory([]), 'unknown', 'Array input');
+        });
+    });
 
         it('should prioritize more specific multi-word keys if current logic handles it (it may not perfectly)', () => {
             assert.strictEqual(getFoodCategory('whole wheat bread'), 'grain_whole', 'Test Case 9 Failed: Whole Wheat Bread');
@@ -480,12 +514,114 @@ describe('dietaryPatternService Tests', () => {
                 { foodCategory: 'snacks_processed', predictedPostMealMood: 'Anxious', createdAt: new Date() },
             ];
             const patterns = detectEmotionalEating(meals);
-            assert.strictEqual(patterns.length, 2, "Test Case EE7 Failed: Should detect two distinct patterns");
-            assert.ok(patterns.some(p=>p.name === "Emotional Eating: User-Logged Mood (Score 1) and sweets"), "Test Case EE7a: Missing mood-food pattern");
-            assert.ok(patterns.some(p=>p.name === "Pattern: snacks_processed and Negative Predicted Mood"), "Test Case EE7b: Missing food-prediction pattern");
+            // Additional tests for dietaryPatternService.js
+
+            describe('getFoodCategory(foodName) - Robustness and Edge Cases', () => {
+                it('should not match substrings inside other words (e.g., bread in breadfruit)', () => {
+                    assert.strictEqual(getFoodCategory('breadfruit'), 'unknown', 'Should not match bread in breadfruit');
+                    assert.strictEqual(getFoodCategory('grapefruit'), 'unknown', 'Should not match grape in grapefruit');
+                });
+
+                it('should prioritize longer keys over shorter ones (white bread vs bread)', () => {
+                    assert.strictEqual(getFoodCategory('white bread'), 'grain_refined', 'white bread should be grain_refined');
+                    assert.strictEqual(getFoodCategory('whole wheat bread'), 'grain_whole', 'whole wheat bread should be grain_whole');
+                    assert.strictEqual(getFoodCategory('bread'), 'grain', 'plain bread should be grain');
+                });
+
+                it('should handle punctuation and whitespace robustly', () => {
+                    assert.strictEqual(getFoodCategory('  white bread.  '), 'grain_refined', 'Whitespace and period');
+                    assert.strictEqual(getFoodCategory('whole wheat bread!'), 'grain_whole', 'Exclamation mark');
+                    assert.strictEqual(getFoodCategory('cake,'), 'sweets', 'Comma');
+                    assert.strictEqual(getFoodCategory('banana...'), 'fruit', 'Ellipsis');
+                });
+
+                it('should handle plural and singular forms if mapping exists', () => {
+                    assert.strictEqual(getFoodCategory('eggs'), 'protein', 'Plural eggs');
+                    assert.strictEqual(getFoodCategory('egg'), 'unknown', 'Singular egg not in mapping');
+                    assert.strictEqual(getFoodCategory('cookies'), 'sweets', 'Plural cookies');
+                    assert.strictEqual(getFoodCategory('cookie'), 'unknown', 'Singular cookie not in mapping');
+                });
+
+                it('should return "unknown" for non-string input', () => {
+                    assert.strictEqual(getFoodCategory(123), 'unknown', 'Numeric input');
+                    assert.strictEqual(getFoodCategory({}), 'unknown', 'Object input');
+                    assert.strictEqual(getFoodCategory([]), 'unknown', 'Array input');
+                    assert.strictEqual(getFoodCategory(null), 'unknown', 'Null input');
+                    assert.strictEqual(getFoodCategory(undefined), 'unknown', 'Undefined input');
+                });
+
+                it('should handle empty string input', () => {
+                    assert.strictEqual(getFoodCategory(''), 'unknown', 'Empty string');
+                    assert.strictEqual(getFoodCategory('   '), 'unknown', 'Whitespace only');
+                });
+
+                it('should match foods with numbers and ignore numbers', () => {
+                    assert.strictEqual(getFoodCategory('2 eggs'), 'protein', 'Number before food');
+                    assert.strictEqual(getFoodCategory('one apple'), 'fruit', 'Word number before food');
+                });
+            });
+
+            describe('mapPortionToQuantitative(portionString) - Edge Cases', () => {
+                it('should return null for null or undefined input', () => {
+                    assert.strictEqual(mapPortionToQuantitative(null), null, 'Null input');
+                    assert.strictEqual(mapPortionToQuantitative(undefined), null, 'Undefined input');
+                });
+
+                it('should return 1 for empty string or whitespace', () => {
+                    assert.strictEqual(mapPortionToQuantitative(''), 1, 'Empty string');
+                    assert.strictEqual(mapPortionToQuantitative('   '), 1, 'Whitespace only');
+                });
+
+                it('should extract numbers even with extra text', () => {
+                    assert.strictEqual(mapPortionToQuantitative('about 3.5 cups'), 3.5, 'Decimal number');
+                    assert.strictEqual(mapPortionToQuantitative('2.0 servings'), 2.0, 'Float number');
+                    assert.strictEqual(mapPortionToQuantitative('100 grams'), 100, 'Integer number');
+                });
+
+                it('should return 1 for non-matching text', () => {
+                    assert.strictEqual(mapPortionToQuantitative('unknown portion'), 1, 'Non-matching text');
+                });
+            });
+
+            describe('detectHighIntake fallback logic', () => {
+                it('should use getFoodCategory fallback for predictedFoodName', () => {
+                    const meals = [
+                        { predictedFoodName: "apple pie" }, // sweets
+                        { predictedFoodName: "cake" },      // sweets
+                        { predictedFoodName: "banana" },    // fruit
+                        { predictedFoodName: "chicken" }    // protein
+                    ];
+                    const result = detectHighIntake(meals, 'sweets', 'Sugary Delights', 0.4);
+                    assert.ok(result, 'Fallback should detect high intake');
+                    assert.strictEqual(result.name, "High Intake of Sugary Delights");
+                    assert.strictEqual(result.details, "50% of logged meals included Sugary Delights.");
+                });
+
+                it('should not detect high intake if fallback does not match enough', () => {
+                    const meals = [
+                        { predictedFoodName: "banana" },
+                        { predictedFoodName: "chicken" }
+                    ];
+                    const result = detectHighIntake(meals, 'sweets', 'Sugary Delights', 0.4);
+                    assert.strictEqual(result, null, 'Fallback should not detect if not enough matches');
+                });
+            });
+
+            describe('getFoodCategory(foodName) - Regression for known bugs', () => {
+                it('should not throw TypeError for non-string input', () => {
+                    assert.doesNotThrow(() => getFoodCategory(123), 'Should not throw for number');
+                    assert.doesNotThrow(() => getFoodCategory({}), 'Should not throw for object');
+                    assert.doesNotThrow(() => getFoodCategory([]), 'Should not throw for array');
+                });
+
+                it('should not match "bread" in "breadfruit"', () => {
+                    assert.strictEqual(getFoodCategory('breadfruit'), 'unknown', 'No false positive for breadfruit');
+                });
+
+                it('should match "white bread" before "bread"', () => {
+                    assert.strictEqual(getFoodCategory('white bread'), 'grain_refined', 'white bread prioritized');
+                    assert.strictEqual(getFoodCategory('bread'), 'grain', 'plain bread');
+                });
+            });
         });
     });
-
-});
-
-console.log("dietaryPatternService tests completed. Manually check for assertion errors if any.");

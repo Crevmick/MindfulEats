@@ -1,0 +1,106 @@
+[
+  {
+    "mealSizeCode": 1,
+    "hungerBefore": 6,
+    "hungerAfter": 3,
+    "mealType": "lunch",
+    "hourOfDay": 13,
+    "moodScore": "Happy"
+  },
+  {
+    "mealSizeCode": 0,
+    "hungerBefore": 8,
+    "hungerAfter": 5,
+    "mealType": "breakfast",
+    "hourOfDay": 8,
+    "moodScore": "Neutral"
+  },
+  {
+    "mealSizeCode": 2,
+    "hungerBefore": 7,
+    "hungerAfter": 2,
+    "mealType": "dinner",
+    "hourOfDay": 19,
+    "moodScore": "Grateful"
+  },
+  {
+    "mealSizeCode": 0,
+    "hungerBefore": 9,
+    "hungerAfter": 4,
+    "mealType": "breakfast",
+    "hourOfDay": 7,
+    "moodScore": "Happy"
+  },
+  {
+    "mealSizeCode": 2,
+    "hungerBefore": 5,
+    "hungerAfter": 1,
+    "mealType": "dinner",
+    "hourOfDay": 20,
+    "moodScore": "Frustrated"
+  },
+  {
+    "mealSizeCode": 1,
+    "hungerBefore": 4,
+    "hungerAfter": 3,
+    "mealType": "lunch",
+    "hourOfDay": 12,
+    "moodScore": "Neutral"
+  },
+  {
+    "mealSizeCode": 2,
+    "hungerBefore": 10,
+    "hungerAfter": 6,
+    "mealType": "dinner",
+    "hourOfDay": 21,
+    "moodScore": "Sad"
+  },
+  {
+    "mealSizeCode": 0,
+    "hungerBefore": 7,
+    "hungerAfter": 3,
+    "mealType": "snack",
+    "hourOfDay": 16,
+    "moodScore": "Anxious"
+  },
+  {
+    "mealSizeCode": 1,
+    "hungerBefore": 5,
+    "hungerAfter": 2,
+    "mealType": "lunch",
+    "hourOfDay": 14,
+    "moodScore": "Grateful"
+  },
+  {
+    "mealSizeCode": 0,
+    "hungerBefore": 6,
+    "hungerAfter": 4,
+    "mealType": "breakfast",
+    "hourOfDay": 9,
+    "moodScore": "Happy"
+  },
+  {
+    "mealSizeCode": 2,
+    "hungerBefore": 8,
+    "hungerAfter": 2,
+    "mealType": "dinner",
+    "hourOfDay": 18,
+    "moodScore": "Neutral"
+  },
+  {
+    "mealSizeCode": 1,
+    "hungerBefore": 7,
+    "hungerAfter": 5,
+    "mealType": "snack",
+    "hourOfDay": 15,
+    "moodScore": "Happy"
+  },
+  {
+    "mealSizeCode": 2,
+    "hungerBefore": 9,
+    "hungerAfter": 3,
+    "mealType": "dinner",
+    "hourOfDay": 22,
+    "moodScore": "Frustrated"
+  }
+]

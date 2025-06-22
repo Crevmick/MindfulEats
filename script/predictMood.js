@@ -1,4 +1,4 @@
-import * as tf from '@tensorflow/tfjs';
+import * as tf from '@tensorflow/tfjs-node';
 
 // Mappings (consistent with trainModel.js)
 const moodMap = { 'Frustrated': 0, 'Sad': 1, 'Anxious': 2, 'Neutral': 3, 'Grateful': 4, 'Happy': 5 };

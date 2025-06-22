@@ -18,11 +18,8 @@ import insightRouter from './routes/Insights/insightRoutes.js';
 import mealRoutes from './routes/Meal/mealRoute.js';
 import passwordResetRoutes from './routes/Auth/forgetPasswordRoute.js'; 
 import otpRoute from './routes/Auth/otpRoute.js';
-
-
-//importing route
 import authRouter from './routes/Auth/GoogleRoute.js';  // Import authRouter for Google login
-import moodLogRoutes from './routes/Auth/moodLogRoute.js'; // Import mood log routes
+import moodLogRoutes from './routes/Mood/moodLogRoute.js'; // Import mood log routes
 dotenv.config();
 
 //connect DB 
@@ -39,6 +36,7 @@ app.use(morgan('dev'));
 app.use(cors());
 app.use(helmet()); //  To secure HTTP headers
 app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
 
 // Mount routes for Google authentication
 app.use('/auth', authRouter); // This will handle /auth/google and /auth/google/callback

@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
 const mealSchema = new mongoose.Schema({
+   foodName: { 
+    type: String,
+    required: false
+  },
   portionSize: {
     type: String,
     required: false,
