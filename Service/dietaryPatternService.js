@@ -100,18 +100,55 @@ const foodToCategory = {
   "candy": "sweets",
   "pastry": "sweets",
   "pastries": "sweets",
-  "chips": "snacks_processed", 
+  "chips": "snacks_processed",
+  "potato chips": "snacks_processed",
+  "tortilla chips": "snacks_processed",
+  "crackers": "snacks_processed",
+  "pretzels": "snacks_processed",
+  "french fries": "snacks_processed", // Often consumed as a snack or processed side
   "soda": "beverage_sugary",
+  "juice": "beverage_sugary", // Defaulting to sugary as many juices are high in sugar
+  "fruit juice": "beverage_sugary",
+  "candy bar": "sweets",
+  "chocolate bar": "sweets",
+  "donut": "sweets",
+  "muffin": "sweets", // Can vary, but often sugary
+  // More complex/mixed items - categorized by primary component or common perception
+  "smoothie": "beverage", // Can be fruit/veg based, but often liquid meal/snack form
+  "rice cake": "grain_refined",
+  "rice cakes": "grain_refined",
+  "peanut butter": "fat_healthy",
+  "salad": "vegetable",
+  "soup": "unknown", // Too variable
+  "sandwich": "grain", // Implies bread
+  "stir fry": "vegetable", // Assuming primarily vegetable based
+  "curry": "unknown", // Too variable
+  "pizza": "grain_refined", // Base is grain, toppings vary widely
+  "burger": "protein", // Assuming patty is central; bun is grain
+  "hot dog": "protein_processed", // New category, or map to protein/snacks_processed
+  "bacon": "protein_processed",
+  "sausage": "protein_processed",
+  "deli meat": "protein_processed",
+  "instant ramen": "grain_refined",
+  "instant noodles": "grain_refined",
+  "croissant": "grain_refined",
+  "bagel": "grain_refined",
   // Beverages
   "water": "beverage",
   "coffee": "beverage",
   "tea": "beverage",
 };
 
+// It might be useful to add a category like "protein_processed" if not already implicitly covered
+// For now, added specific items.
+
 function getFoodCategory(foodName) {
-  if (typeof foodName !== 'string') return "unknown";
+  if (typeof foodName !== 'string') {
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: getFoodCategory - FoodName is not a string: ${foodName}, returning 'unknown'`);
+    return "unknown";
+  }
   let normalized = foodName
-    .replace(/[0-9]/g, '') 
+    .replace(/[0-9]/g, '')
     .replace(/\b(one|two|three|four|five|six|seven|eight|nine|ten)\b/gi, '')
     .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '')
     .replace(/\s+/g, ' ')
@@ -155,6 +192,7 @@ function getFoodCategory(foodName) {
     if (foodToCategory[pluralES]) return foodToCategory[pluralES];
   }
 
+  if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: getFoodCategory - FoodName '${foodName}' (normalized: '${normalized}') mapped to 'unknown'`);
   return "unknown";
 }
 function mapPortionToQuantitative(portionString) {
@@ -214,6 +252,11 @@ function detectHighIntake(meals, targetCategory, categoryDisplayName, mealFreque
   });
   const matchingMeals = mealsWithCategory.filter(meal => meal.foodCategory === targetCategory);
   const percentage = matchingMeals.length / meals.length;
+
+  if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') {
+    console.log(`DEBUG: detectHighIntake - Target: ${targetCategory}, Calculated Percentage: ${percentage.toFixed(2)}, Threshold: ${mealFrequencyThreshold}, Detected: ${percentage > mealFrequencyThreshold}`);
+  }
+
   if (percentage > mealFrequencyThreshold) {
     return { name: `High Intake of ${categoryDisplayName}`, detected: true, details: `${(percentage * 100).toFixed(0)}% of logged meals included ${categoryDisplayName}.` };
   }
@@ -222,6 +265,7 @@ function detectHighIntake(meals, targetCategory, categoryDisplayName, mealFreque
 
 
 function analyzeOverallCarbIntake(meals) {
+  if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeOverallCarbIntake - Processing ${meals?.length || 0} meals.`);
   if (!meals || meals.length === 0) return null;
   const sugarySnackPattern = detectHighIntake(meals, 'sweets', 'Sugary Foods/Snacks', 0.2);
   if (sugarySnackPattern) return sugarySnackPattern;
@@ -231,6 +275,7 @@ function analyzeOverallCarbIntake(meals) {
 }
 
 function detectEmotionalEating(meals) {
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: detectEmotionalEating - Starting for ${meals?.length || 0} meals.`);
     const detectedPatterns = [];
     if (!meals || meals.length === 0) return detectedPatterns;
 
@@ -261,7 +306,12 @@ function detectEmotionalEating(meals) {
             const moodTime = new Date(meal.moodLogId.createdAt);
             const timeDiffHours = Math.abs(moodTime - mealTime) / (1000 * 60 * 60);
 
+            if (process.env.DEBUG_DIETARY_ANALYSIS === 'true' && meal.moodLogId) {
+                console.log(`DEBUG: detectEmotionalEating - Meal ID: ${meal._id}, Food: ${foodName}, MealTime: ${mealTime.toISOString()}, MoodTime: ${moodTime.toISOString()}, TimeDiffHours: ${timeDiffHours.toFixed(2)}, Mood: ${loggedMoodLabel}`);
+            }
+
             if (timeDiffHours <= MAX_TIME_DIFF_HOURS) {
+                if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: detectEmotionalEating - TimeDiff <= MAX_TIME_DIFF_HOURS for Meal ID: ${meal._id}. Associating mood.`);
                 let moodTypePrefix = "Other Mood";
                 if (negativeMoodLabels.includes(loggedMoodLabel)) moodTypePrefix = "Negative Mood";
                 else if (positiveMoodLabels.includes(loggedMoodLabel)) moodTypePrefix = "Positive Mood";
@@ -303,11 +353,18 @@ function detectEmotionalEating(meals) {
     });
 
     // --- Generate Patterns from Associations ---
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') {
+        console.log("DEBUG: detectEmotionalEating - moodToFoodAssociations:", JSON.stringify(moodToFoodAssociations, null, 2));
+        console.log("DEBUG: detectEmotionalEating - foodToPredictedMoodAssociations:", JSON.stringify(foodToPredictedMoodAssociations, null, 2));
+    }
 
     // From Logged Mood -> Food
     for (const moodKey in moodToFoodAssociations) {
         const data = moodToFoodAssociations[moodKey];
-        if (data.totalOccurrences < MIN_OCCURRENCES) continue;
+        if (data.totalOccurrences < MIN_OCCURRENCES) {
+            if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: detectEmotionalEating - Skipping moodKey ${moodKey}, totalOccurrences ${data.totalOccurrences} < MIN_OCCURRENCES ${MIN_OCCURRENCES}`);
+            continue;
+        }
 
         // Check specific food items
         for (const foodItem in data.foodItems) {
@@ -319,6 +376,7 @@ function detectEmotionalEating(meals) {
                     detected: true,
                     details: `When ${moodKey.toLowerCase()} was logged near a meal, '${foodItem}' was consumed in ${count} of ${data.totalOccurrences} such instances.`
                 });
+                if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: detectEmotionalEating - Detected logged_mood_specific_food: ${moodKey} with ${foodItem}`);
             }
         }
         // Check food categories (especially for negative moods and comfort foods)
@@ -332,6 +390,7 @@ function detectEmotionalEating(meals) {
                         detected: true,
                         details: `When ${moodKey.toLowerCase()} was logged near a meal, foods from the '${category}' category were consumed in ${count} of ${data.totalOccurrences} such instances.`
                     });
+                    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: detectEmotionalEating - Detected emotional_eating_category_logged: ${moodKey} with ${category}`);
                 }
             }
         }
@@ -340,7 +399,10 @@ function detectEmotionalEating(meals) {
     // From Food -> Predicted Mood
     for (const foodOrCatKey in foodToPredictedMoodAssociations) {
         const data = foodToPredictedMoodAssociations[foodOrCatKey];
-        if (data.totalOccurrences < MIN_OCCURRENCES) continue;
+        if (data.totalOccurrences < MIN_OCCURRENCES) {
+            if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: detectEmotionalEating - Skipping foodOrCatKey ${foodOrCatKey}, totalOccurrences ${data.totalOccurrences} < MIN_OCCURRENCES ${MIN_OCCURRENCES}`);
+            continue;
+        }
 
         const itemName = foodOrCatKey.startsWith('category:') ? foodOrCatKey.replace('category:', '') : foodOrCatKey;
         const itemType = foodOrCatKey.startsWith('category:') ? "category" : "food item";
@@ -360,15 +422,22 @@ function detectEmotionalEating(meals) {
                         detected: true,
                         details: `Consuming '${itemName}' was followed by a predicted mood of '${predictedMood}' in ${count} of ${data.totalOccurrences} instances where this ${itemType} was logged with a prediction.`
                     });
+                    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: detectEmotionalEating - Detected food_predicted_${significance.toLowerCase()}_mood: ${itemName} (${itemType}) with ${predictedMood}`);
                 }
             }
         }
     }
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: detectEmotionalEating - Finished. Detected ${detectedPatterns.length} emotional patterns.`);
     return detectedPatterns;
 }
 
 function generateInsights(detectedPatterns) {
   const insights = [];
+  // Added a check for process.env.DEBUG_DIETARY_ANALYSIS to potentially log input patterns
+  if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') {
+    console.log(`DEBUG: generateInsights - Received ${detectedPatterns?.length || 0} detectedPatterns.`);
+  }
+
   if (!detectedPatterns || detectedPatterns.length === 0) {
       insights.push("Based on your recent logs, no specific dietary patterns requiring immediate attention were flagged. Keep up the mindful logging!");
       return insights;
@@ -533,17 +602,24 @@ function generateRecommendations(detectedPatterns) {
 }
 
 async function analyzeDietaryPatterns(userId, daysToAnalyze = 7) {
+  if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') {
+    console.log(`DEBUG: analyzeDietaryPatterns - Starting analysis for userId: ${userId}, daysToAnalyze: ${daysToAnalyze}`);
+  }
   try {
     const today = new Date();
     const startDate = new Date();
     startDate.setDate(today.getDate() - daysToAnalyze);
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - Date range: ${startDate.toISOString()} to ${today.toISOString()}`);
 
     const meals = await Meal.find({
       userId: userId,
       createdAt: { $gte: startDate }
     }).populate('moodLogId').lean();
 
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - Fetched ${meals?.length || 0} meals.`);
+
     if (!meals || meals.length === 0) {
+      if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log("DEBUG: analyzeDietaryPatterns - No meals found for the period.");
       return {
         patterns: [],
         insights: ["No meal data found for the selected period. Start logging your meals to get an analysis."],
@@ -554,11 +630,15 @@ async function analyzeDietaryPatterns(userId, daysToAnalyze = 7) {
 
     const mealDates = meals.map(meal => new Date(meal.createdAt).toISOString().split('T')[0]);
     const actualDaysWithLogging = new Set(mealDates).size;
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - Actual days with logging: ${actualDaysWithLogging}`);
 
     const MIN_LOGGING_DAYS = 5;
     const MIN_TOTAL_MEALS = 10;
 
     if (actualDaysWithLogging < MIN_LOGGING_DAYS && meals.length < MIN_TOTAL_MEALS) {
+      if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') {
+        console.log(`DEBUG: analyzeDietaryPatterns - Insufficient data: ${actualDaysWithLogging} days < ${MIN_LOGGING_DAYS} AND ${meals.length} meals < ${MIN_TOTAL_MEALS}.`);
+      }
       return {
         patterns: [],
         insights: [`Log meals and moods for at least ${MIN_LOGGING_DAYS} different days (or a total of ${MIN_TOTAL_MEALS} meals) to receive personalized dietary patterns and insights. You currently have ${actualDaysWithLogging} day(s) with logs and ${meals.length} total meals.`],
@@ -568,37 +648,74 @@ async function analyzeDietaryPatterns(userId, daysToAnalyze = 7) {
     }
 
     const detectedPatterns = [];
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log("DEBUG: analyzeDietaryPatterns - Data sufficient. Proceeding with pattern detection.");
 
     const frequentSnacking = detectFrequentSnacking(meals, actualDaysWithLogging);
     if (frequentSnacking) detectedPatterns.push(frequentSnacking);
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - Frequent Snacking detected: ${!!frequentSnacking}`);
 
     const skippingBreakfast = detectSkippingBreakfast(meals, actualDaysWithLogging);
     if (skippingBreakfast) detectedPatterns.push(skippingBreakfast);
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - Skipping Breakfast detected: ${!!skippingBreakfast}`);
 
     const highProcessedSnacks = detectHighIntake(meals, 'snacks_processed', 'Processed Snacks', 0.15);
     if (highProcessedSnacks) detectedPatterns.push(highProcessedSnacks);
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - High Processed Snacks detected: ${!!highProcessedSnacks}`);
 
     const highSugaryDrinks = detectHighIntake(meals, 'beverage_sugary', 'Sugary Beverages', 0.1);
     if (highSugaryDrinks) detectedPatterns.push(highSugaryDrinks);
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - High Sugary Drinks detected: ${!!highSugaryDrinks}`);
 
     const carbIntakePattern = analyzeOverallCarbIntake(meals);
     if (carbIntakePattern) {
       if (!detectedPatterns.some(p => p.name === carbIntakePattern.name)) {
         detectedPatterns.push(carbIntakePattern);
+        if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - Overall Carb Intake pattern detected: ${carbIntakePattern.name}`);
+      } else {
+        if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - Overall Carb Intake pattern (${carbIntakePattern.name}) already covered by other high intake.`);
       }
+    } else {
+      if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - No Overall Carb Intake pattern detected.`);
     }
 
     const emotionalPatterns = detectEmotionalEating(meals);
     if (emotionalPatterns && emotionalPatterns.length > 0) {
       detectedPatterns.push(...emotionalPatterns);
+      if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - Emotional Eating patterns detected: ${emotionalPatterns.length}`);
+    } else {
+      if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - No Emotional Eating patterns detected.`);
     }
 
-    const insights = generateInsights(detectedPatterns);
-    const recommendations = generateRecommendations(detectedPatterns);
-    return { patterns: detectedPatterns, insights: insights, recommendations: recommendations };
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - Total patterns detected: ${detectedPatterns.length}`, JSON.stringify(detectedPatterns, null, 2));
+
+    let finalInsights;
+    const finalRecommendations = generateRecommendations(detectedPatterns); // Recommendations are generated based on patterns or lack thereof
+
+    if (detectedPatterns.length === 0) {
+      // Sufficient data was processed, but no patterns were flagged.
+      finalInsights = ["Sufficient data was analyzed for the period. Your eating habits appear balanced as no specific dietary patterns (like frequent snacking, high intake of sweets, etc.) were detected based on our current criteria. Keep up the mindful logging!"];
+      if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - Analysis complete. No patterns detected with sufficient data.`);
+      return {
+        patterns: [], // Empty
+        insights: finalInsights,
+        recommendations: finalRecommendations, // Will contain generic "continue mindful eating"
+        summary: "Sufficient data analyzed. No specific dietary patterns detected."
+      };
+    } else {
+      finalInsights = generateInsights(detectedPatterns);
+      if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log(`DEBUG: analyzeDietaryPatterns - Analysis complete. Returning ${detectedPatterns.length} patterns.`);
+      return {
+        patterns: detectedPatterns,
+        insights: finalInsights,
+        recommendations: finalRecommendations,
+        summary: `${detectedPatterns.length} dietary pattern(s) found.` // More specific summary
+      };
+    }
 
   } catch (error) {
-    console.error("Error in analyzeDietaryPatterns:", error);
+    console.error("Error in analyzeDietaryPatterns:", error); // Keep this critical error log
+    if (process.env.DEBUG_DIETARY_ANALYSIS === 'true') console.log("DEBUG: analyzeDietaryPatterns - Error occurred during analysis:", error);
+    // Ensure generateInsights/Recommendations are called even in error to provide default messages
     return { patterns: [], insights: generateInsights([]), recommendations: generateRecommendations([]), error: "Failed to analyze dietary patterns due to a server error." };
   }
 }

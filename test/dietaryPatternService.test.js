@@ -81,6 +81,19 @@ describe('dietaryPatternService Tests', () => {
             assert.strictEqual(getFoodCategory(null), 'unknown', 'Test Case 14 Failed: Null input');
             assert.strictEqual(getFoodCategory(undefined), 'unknown', 'Test Case 15 Failed: Undefined input');
         });
+
+        it('should correctly categorize newly added food items', () => {
+            assert.strictEqual(getFoodCategory('smoothie'), 'beverage', 'Newly Added: smoothie');
+            assert.strictEqual(getFoodCategory('rice cakes'), 'grain_refined', 'Newly Added: rice cakes');
+            assert.strictEqual(getFoodCategory('peanut butter'), 'fat_healthy', 'Newly Added: peanut butter');
+            assert.strictEqual(getFoodCategory('french fries'), 'snacks_processed', 'Newly Added: french fries');
+            assert.strictEqual(getFoodCategory('pizza slice'), 'grain_refined', 'Newly Added: pizza'); // pizza slice should still detect pizza
+            assert.strictEqual(getFoodCategory('hot dog'), 'protein_processed', 'Newly Added: hot dog');
+            assert.strictEqual(getFoodCategory('apple juice'), 'beverage_sugary', 'Newly Added: apple juice');
+            assert.strictEqual(getFoodCategory('crackers'), 'snacks_processed', 'Newly Added: crackers');
+            assert.strictEqual(getFoodCategory('instant noodles'), 'grain_refined', 'Newly Added: instant noodles');
+            assert.strictEqual(getFoodCategory('bacon strips'), 'protein_processed', 'Newly Added: bacon');
+        });
     });
 
     describe('mapPortionToQuantitative(portionString)', () => {
@@ -278,6 +291,20 @@ describe('dietaryPatternService Tests', () => {
 
             const mealsNotAllMatch = [createMeal('sweets'), createMeal('fruit')];
             assert.strictEqual(detectHighIntake(mealsNotAllMatch, 'sweets', 'Sugary Snacks', 0.99), null, 'Test Case 41c Failed: Threshold 0.99, not all match');
+        });
+
+        it('should detect high intake for newly added "protein_processed" category items', () => {
+            const meals = [
+                { foodCategory: 'protein_processed', predictedFoodName: 'hot dog' },
+                { foodCategory: 'protein_processed', predictedFoodName: 'bacon' },
+                { foodCategory: 'protein', predictedFoodName: 'chicken' },
+                { foodCategory: 'protein_processed', predictedFoodName: 'sausage' },
+            ];
+            // 3 out of 4 meals are 'protein_processed' (75%)
+            const result = detectHighIntake(meals, 'protein_processed', 'Processed Protein', 0.7);
+            assert.ok(result, 'Test Case 41d Failed: Should detect high intake of protein_processed');
+            assert.strictEqual(result.name, "High Intake of Processed Protein", 'Test Case 41e Failed: Name mismatch for protein_processed');
+            assert.strictEqual(result.details, "75% of logged meals included Processed Protein.", "Test Case 41f Failed: Details mismatch for protein_processed");
         });
     });
 
@@ -485,6 +512,29 @@ describe('dietaryPatternService Tests', () => {
             const patterns = detectEmotionalEating(meals);
             assert.strictEqual(patterns.length, 0, "Test Case EE3 Failed: Pattern should NOT be detected due to large time diff");
         });
+
+        it('should correctly apply MAX_TIME_DIFF_HOURS boundary conditions', () => {
+            const MAX_HOURS = 3;
+            const justAtMaxTime = new Date(now.getTime() - MAX_HOURS * 60 * 60 * 1000);
+            const justOverMaxTime = new Date(now.getTime() - (MAX_HOURS * 60 * 60 * 1000 + 60000)); // MAX_HOURS + 1 minute
+
+            const mealsAtBoundary = [
+                { predictedFoodName: "Candy", foodCategory: 'sweets', createdAt: justAtMaxTime, moodLogId: { moodScore: "Anxious", createdAt: new Date(now) } },
+                { predictedFoodName: "Cookie", foodCategory: 'sweets', createdAt: justAtMaxTime, moodLogId: { moodScore: "Anxious", createdAt: new Date(now) } },
+            ];
+            const patternsAtBoundary = detectEmotionalEating(mealsAtBoundary);
+            assert.ok(patternsAtBoundary.some(p => p.type === "emotional_eating_category_logged" && p.name.includes("Negative Mood (Anxious) and sweets")), "Test Case EE3.1 Failed: Should detect at exactly MAX_TIME_DIFF_HOURS");
+
+            const mealsOverBoundary = [
+                { predictedFoodName: "Candy", foodCategory: 'sweets', createdAt: justOverMaxTime, moodLogId: { moodScore: "Stressed", createdAt: new Date(now) } }, // Stressed is not in negativeMoodLabels by default, let's use Anxious
+                { predictedFoodName: "Cookie", foodCategory: 'sweets', createdAt: justOverMaxTime, moodLogId: { moodScore: "Anxious", createdAt: new Date(now) } },
+                { predictedFoodName: "Donut", foodCategory: 'sweets', createdAt: justOverMaxTime, moodLogId: { moodScore: "Anxious", createdAt: new Date(now) } },
+            ];
+            const patternsOverBoundary = detectEmotionalEating(mealsOverBoundary);
+            // console.log("Patterns Over Boundary:", JSON.stringify(patternsOverBoundary, null, 2)); // For debugging test if it fails
+            assert.strictEqual(patternsOverBoundary.filter(p => p.type === "emotional_eating_category_logged").length, 0, "Test Case EE3.2 Failed: Should NOT detect just over MAX_TIME_DIFF_HOURS");
+        });
+
 
         it('should NOT detect Logged Mood -> Food if MIN_OCCURRENCES for mood not met', () => {
             const meals = [ // MIN_OCCURRENCES is 2
