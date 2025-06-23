@@ -96,7 +96,7 @@ app.get('/', (req, res) => {
           <h1>MindfullEat api</h1>
           <p>Status: <span style="color: green;">Success</span></p>
           <p>To view the API documentation, click below:</p>
-          <p><a href="#" target="_blank">View API Documentation</a></p>
+          <p><a href="https://documenter.getpostman.com/view/43171328/2sB2xCgoZS" target="_blank">View API Documentation</a></p>
         </body>
       </html>
     `);
