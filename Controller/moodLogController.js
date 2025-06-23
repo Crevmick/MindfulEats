@@ -25,7 +25,7 @@ export const getAllMoodLogs = async (req, res) => {
 //This help to get mood logs by user
 export const getMoodLogsByUser = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.id;
     const moodLogs = await MoodLog.find({ userId }).sort({ createdAt: -1 });
     res.json(moodLogs);
   } catch (err) {
