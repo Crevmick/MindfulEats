@@ -15,7 +15,7 @@ router.get('/', authenticateUser, async (req, res) => {
 
 router.get('/me', authenticateUser, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     if (!userId) {
     res.status(400).json({ message: "You need to login" });
     }
@@ -35,7 +35,7 @@ router.get('/me', authenticateUser, async (req, res) => {
 
 router.patch('/update-profile', authenticateUser, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     // Get fields user wants to update
     const { fullName, email } = req.body;
