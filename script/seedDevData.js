@@ -80,7 +80,7 @@ const seedData = async () => {
 
     const moodLogs = [];
     for (const user of createdUsers) {
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < 14; i++) {
         const randomMood = moodScores[Math.floor(Math.random() * moodScores.length)];
         const randomReason = sampleReasons[randomMood][Math.floor(Math.random() * sampleReasons[randomMood].length)];
         const logDate = new Date();
